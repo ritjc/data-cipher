@@ -49,5 +49,10 @@
 		"inquirer": "^7.3.3",
 		"lodash": "^4.17.20",
 		"shelljs": "^0.8.4"
-	}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:ritjc/data-cipher.git"
+	},
+	"bugs": "https://github.com/ritjc/data-cipher/issues"
 }
