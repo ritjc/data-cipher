@@ -1,0 +1,84 @@
+#!/usr/bin/env node
+const commander = require('commander')
+const packageJson = require('../package.json')
+const { logger, cliHandle } = require('../dist/main.js')
+
+const program = new commander.Command()
+
+const cwd = process.cwd()
+
+const MODE_ENUM = {
+	ENCRYPT: 'encrypt',
+	DECRYPT: 'decrypt',
+}
+
+logger.info('Command execution path：' + cwd)
+
+program.version(packageJson.version).usage('<command> [options] ')
+
+function genOption(program, cmdName, opts, description, cliHandle) {
+	let programHandle = program
+	const options = {
+		input: [
+			'-i, --input <string>',
+			'input data is string text or a file path',
+		],
+		output: ['-o, --output <string>', 'output file path'],
+		type: [
+			'-t, --type <string>',
+			"input data type, Optional 'string' or 'file'",
+		],
+		mode: [
+			'-m, --mode <string>',
+			`encrypt/decrypt mode, Optional '${MODE_ENUM.ENCRYPT}' or '${MODE_ENUM.DECRYPT}'`,
+		],
+		passphrase: ['-p, --passphrase <string>', 'encrypt/decrypt passphrase'],
+	}
+	if (cmdName && [MODE_ENUM.ENCRYPT, MODE_ENUM.DECRYPT].includes(cmdName)) {
+		programHandle = program.command(cmdName)
+		delete options.mode
+	}
+	Object.keys(options).forEach((op) => {
+		if (opts.includes(op))
+			programHandle = programHandle.option(options[op][0], options[op][1])
+	})
+	if (description) {
+		programHandle = programHandle.description(description)
+	}
+	programHandle.action((/* cmd */) => {
+		cliHandle(
+			cmdName,
+			Object.keys(options).reduce(function (rs, i) {
+				rs[i] = program[i]
+				return rs
+			}, {}),
+			options
+		)
+	})
+}
+
+genOption(
+	program,
+	MODE_ENUM.ENCRYPT,
+	['input', 'output', 'type', 'passphrase'],
+	'encrypt the data',
+	cliHandle
+)
+
+genOption(
+	program,
+	MODE_ENUM.DECRYPT,
+	['input', 'output', 'type', 'passphrase'],
+	'decrypt the data',
+	cliHandle
+)
+
+genOption(
+	program,
+	'',
+	['input', 'output', 'type', 'passphrase', 'mode'],
+	'',
+	cliHandle
+)
+
+program.parse(process.argv)
